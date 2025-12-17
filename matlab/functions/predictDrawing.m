@@ -1,6 +1,6 @@
 function predictDrawing(net, PSF)
     % Create figure and axes for drawing
-    f = figure('Name', 'Draw a Digit', ...
+    f = figure('Name', 'Draw Something (Like A Digit)', ...
         'NumberTitle', 'off', ...
         'Color', 'white', ...
         'WindowButtonDownFcn', @startDraw, ...
@@ -41,8 +41,8 @@ function predictDrawing(net, PSF)
         end
     end
 
-    % Add a button to classify
-    uicontrol('Style', 'pushbutton', 'String', 'Classify', ...
+    % Add a button to predict the initial image
+    uicontrol('Style', 'pushbutton', 'String', 'Predict', ...
         'Position', [10 10 80 30], ...
         'Callback', @reconstruct);
 
@@ -52,14 +52,33 @@ function predictDrawing(net, PSF)
         'Callback', @(~,~) cla(ax));
 
     function reconstruct(~,~)
-        % Capture the image from axes
         frame = getframe(ax);
         img = rgb2gray(frame.cdata);
+    
+        % Preprocess
         img = imresize(imcomplement(img), [16 16]);
         img = im2double(img);
-        img = conv2(img,PSF,'same');
-        % Classify
-        img = net(img(:));
-        imshow(img)
+        imgConv = conv2(img, PSF, 'same');
+    
+        % Input formatting: H × W × C × N
+        imgConv = reshape(imgConv, [16 16 1 1]);
+    
+        % Run network
+        predImg = predict(net, imgConv);
+    
+        % Remove singleton dimensions
+        predImg = squeeze(predImg);
+
+        % Display reconstruction
+        figure;
+        subplot(1,3,1);
+        imshow(img, []);
+        title('Original Image');
+        subplot(1,3,2);
+        imshow(imgConv, []);
+        title('Blurred Image');
+        subplot(1,3,3);
+        imshow(predImg, []);
+        title('Reconstructed Image');
     end
 end
