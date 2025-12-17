@@ -10,8 +10,7 @@ addpath("data\")
 addpath("functions\")
 
 taskNames = ["mlp-raw-data", "mlp-augmented-data", "unet-augmented-data"];
-task = 2;
-
+task = 3;
 
 
 %% Load training data

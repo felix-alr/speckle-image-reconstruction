@@ -18,7 +18,7 @@ for i1=1:N
     % Data Augmentation 1 (you can use more than one way of augmenting on
     % one image)
     % aug_image = function(original_image); 
-    aug_image = imtranslate(original_image, [randi([-8,8]), randi([-8,8])]);
+    aug_image = circshift(original_image, [randi([-8,8]), randi([-8,8])]);
     aug_image = imrotate(aug_image, randi([1,560]), 'nearest', 'crop');
     
     [XTrain_aug(:,:,:,i1), YTrain_aug(:,:,:,i1)] = deal(conv2(aug_image,PSF,'same'), aug_image);
