@@ -4,15 +4,13 @@ clear
 addpath("data\training\trained-nets\")
 addpath("functions\")
 
-load("data\Diff_PSF.mat")
 load("data\DATA_Diff_16_aug.mat")
 
+%% Draw and have the network reocnstruct the image from its diffused version
+load("data\Diff_PSF.mat")
 predictDrawing(load("unet-augmented-data-net.mat").net, PSF);
-%predictDrawing(load("mlp-augmented-data-net.mat"), PSF);
-
 
 %% Evaluating mlp with and without data augmentation by plotting the loss curve during training
-%{
 plotLoss("data\training\mlp-raw-data-info.mat");
 plotLoss("data\training\mlp-augmented-data-info.mat");
 plotLoss("data\training\unet-augmented-data-info.mat");
@@ -26,4 +24,3 @@ labelsMLPUNet = {'MLP', 'U-Net'};
 
 compareMetrics(netMLPRaw, netMLPAug, labelsMLP, XValid, YValid);
 compareMetrics(netMLPAug, unetAug, labelsMLPUNet, XValid, YValid);
-%}

@@ -9,6 +9,7 @@ rng(0);
 addpath("data\")
 addpath("functions\")
 
+% Select model and data for training
 taskNames = ["mlp-raw-data", "mlp-augmented-data", "unet-augmented-data"];
 task = 3;
 
@@ -55,9 +56,7 @@ options.ValidationData = {XValid, YValid};
 options.ValidationFrequency = 30;
 options.ValidationPatience = 10;
 
-lossFcn = "crossentropy";
-
-% training using "trainNetwork"
+% Training using "trainNetwork"
 tic;
 [net, info] = trainNetwork(XTrain, YTrain, layers, options);
 trainTime = toc;
@@ -65,16 +64,3 @@ trainTime = toc;
 save("data\training\"+taskNames(task)+"-info.mat", "info");
 save("data\training\trained-nets\"+taskNames(task)+"-net.mat", "net");
 save("data\training\"+taskNames(task)+"-train-time.mat", "trainTime");
-
-%% Calculate Prediction 
-% use command "predict"
-
-%% Evaluate Network
-% calculate RMSE, Correlation, SSIM, PSNR
-
-%% Boxplots for step 6 of instructions
-
-%% Step 7: create Neural Network Layergraph U-Net
-% Layers = [];
-
-%% Boxplots for step 8 of instructions

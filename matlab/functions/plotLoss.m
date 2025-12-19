@@ -15,7 +15,6 @@ function plotLoss(pathToTrainingProgressInfo)
     grid on;
     
     xlabel('Iteration');
-    ylabel('Loss');
-    title('Training And Validation Loss');
+    ylabel('Loss (MSE)');
     legend('Training Loss', 'Validation Loss', Location='best');
 end

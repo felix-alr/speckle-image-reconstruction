@@ -10,7 +10,7 @@ function compareMetrics(net1, net2, labels, XData, YData)
     subplot(2,2,1);
     boxplot([rmseRaw(:), rmseAug(:)], 'Labels', labels);
     ylabel("RMSE");
-    title("Comparison RMSE")
+    title("RMSE")
     
     
     psnrRaw = computePSNR(pred1, YData);
@@ -18,8 +18,8 @@ function compareMetrics(net1, net2, labels, XData, YData)
     
     subplot(2,2,2);
     boxplot([psnrRaw(:), psnrAug(:)], 'Labels', labels);
-    ylabel("PSNR");
-    title("Comparison PSNR")
+    ylabel("PSNR (dB)");
+    title("PSNR")
     
     
     ssimRaw = computeSSIM(pred1, YData);
@@ -28,7 +28,7 @@ function compareMetrics(net1, net2, labels, XData, YData)
     subplot(2,2,3);
     boxplot([ssimRaw(:), ssimAug(:)], 'Labels', labels);
     ylabel("SSIM");
-    title("Comparison SSIM")
+    title("SSIM")
     
     
     corrRaw = computeCrossCorrelation(pred1, YData);
@@ -37,5 +37,5 @@ function compareMetrics(net1, net2, labels, XData, YData)
     subplot(2,2,4);
     boxplot([corrRaw(:), corrAug(:)], 'Labels', labels);
     ylabel("Cross Correlation");
-    title("Comparison Cross Correlation")
+    title("Cross Correlation")
 end
