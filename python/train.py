@@ -19,7 +19,7 @@ def train_network(model: nn.Module, data_loader: DataLoader, optimizer: optim.Op
     options.learning_rate = getattr(options, "learning_rate", 1e-2)
     options.validate = getattr(options, "validate", False)
     options.validation_data = getattr(options, "validation_data", None)
-    options.validate_after_iterations = getattr(options, "validate_after_iterations", data_loader.batch_size-1)
+    options.validation_frequency = getattr(options, "validation_frequency", data_loader.batch_size - 1)
 
     options.validation_patience = getattr(options, "validation_patience", -1)
 
@@ -49,8 +49,8 @@ def train_network(model: nn.Module, data_loader: DataLoader, optimizer: optim.Op
 
         for batch, (x, y) in enumerate(data_loader):
             # Validate if criteria are met
-            if options.validate and options.validation_data is not None and iteration % options.validate_after_iterations == 0:
-                loss = compute_average_loss(model, options.validation_data, nn.MSELoss())
+            if options.validate and options.validation_data is not None and iteration % options.validation_frequency == 0:
+                loss = compute_average_loss(model, options.validation_data, loss_fcn)
                 # Set new lowest loss if it has not yet been set or it's lower than the previously lowest loss
                 if lowest_loss == -1 or loss < lowest_loss:
                     lowest_loss = loss

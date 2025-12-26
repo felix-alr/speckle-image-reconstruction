@@ -60,7 +60,7 @@ if __name__ == '__main__':
         options = types.SimpleNamespace(learning_rate=1e-3)
         options.validate = True
         options.validation_data = test_loader
-        options.validate_after_iterations = 50
+        options.validation_frequency = 50
         options.validation_patience = 100
         options.epochs = 500
 
