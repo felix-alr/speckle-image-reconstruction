@@ -1,24 +1,29 @@
+import random
+from typing import Callable
+
+import numpy as np
 import scipy
 import torch
 import torch.nn.functional as func
 from torch.utils.data import Dataset
 from torchvision import transforms
+from torchvision.transforms import functional
 
 
 class OneHotTransform:
-    def __init__(self, num_classes):
+    def __init__(self, num_classes: int):
         self.num_classes = num_classes
 
-    def __call__(self, x):
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
         return torch.zeros(self.num_classes, dtype=float).scatter_(0, self.convert_to_tensor_if_int(x), 1.0)
 
-    def convert_to_tensor_if_int(self, x):
+    def convert_to_tensor_if_int(self, x) -> torch.Tensor:
         if isinstance(x, int):
             return torch.tensor([x])
         return x
 
 class DiffuserTransform:
-    def __init__(self, kernel):
+    def __init__(self, kernel: torch.Tensor):
         # Flip kernel for convolution
         self.kernel = kernel.flip(0, 1).view(1,1,*kernel.shape)
 
@@ -28,17 +33,45 @@ class DiffuserTransform:
 
         self.padding = (pad_w // 2, pad_w - pad_w // 2, pad_h // 2, pad_h - pad_h // 2)
 
-    def __call__(self, x):
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
         # Apply padding and perform convolution
         x = x.float()
         x = func.pad(x, self.padding)
 
-        return func.conv2d(x, weight=self.kernel, padding=0, stride=1).squeeze(0)
+        return func.conv2d(x, weight=self.kernel, padding=0, stride=1)
 
+
+class RandomizedImageAugmentationTransform:
+        def __call__(self, images: torch.Tensor, size_factor: int = 3) -> torch.Tensor:
+            augmented_set = [img for img in images]
+            for i in range((size_factor-1)*len(images)):
+                augmented_set.append(self.compute_image(images[i%len(images)]))
+            return torch.stack(augmented_set)
+
+        def compute_image(self, image: torch.Tensor) -> torch.Tensor:
+            image = torch.roll(image, random.randint(a=-8, b=8))
+            image = functional.rotate(image, random.randint(a=1,b=359))
+            return image
+
+class ImageDatasetTargetAugmenter:
+    def __init__(self, target_augmentation_transform: Callable[[torch.Tensor], torch.Tensor] = lambda x: x, x_from_target_transform: Callable[[torch.Tensor], torch.Tensor] = lambda x: x):
+        self.target_augmentation_transform = target_augmentation_transform
+        self.x_from_target_transform = x_from_target_transform
+
+    def __call__(self, targets: torch.Tensor) -> (torch.Tensor, torch.Tensor):
+        # Construct y_data from given targets using the augmentation transform
+        y_data = self.target_augmentation_transform(targets)
+
+        # Construct x_data from augmented targets using the target to x transform
+        x_data = []
+        for img in y_data:
+            x_data.append(self.x_from_target_transform(img))
+        x_data = torch.from_numpy(np.array(x_data))
+        return x_data, y_data
 
 # Converts an array of images to a dataset where the training data is the target image from the given array passed through a diffuser transform
 class SpeckleImageReconstructionDataset(Dataset):
-    def __init__(self, images, diffuser_transform, precompute = True, target_shape = (16,16)):
+    def __init__(self, images: torch.Tensor, diffuser_transform: DiffuserTransform, precompute: bool = True, target_shape: (int, int) = (16,16)):
         self.images = images
         self.diffuser = diffuser_transform
         self.target_shape = target_shape
@@ -50,7 +83,7 @@ class SpeckleImageReconstructionDataset(Dataset):
                 self.precomputed_data.append(self.compute_item(i))
             print("Finished precomputing dataset...")
 
-    def compute_item(self, idx):
+    def compute_item(self, idx: int) -> (torch.Tensor, torch.Tensor):
         # Get image
         target = self.images[idx]
         # Normalize
@@ -70,10 +103,10 @@ class SpeckleImageReconstructionDataset(Dataset):
         return input_img, target
 
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.images)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> (torch.Tensor, torch.Tensor):
         if self.precomputed_data:
             return self.precomputed_data[idx]
         else:
@@ -82,8 +115,10 @@ class SpeckleImageReconstructionDataset(Dataset):
 
 class MatlabDataset(Dataset):
     # highest_value refers to the highest possible value of the data for normalization
-    def __init__(self, mat_file, highest_value = 255.0, normalize = True, train = True):
+    def __init__(self, mat_file: str, highest_value: float = 255.0, transform: Callable[[torch.Tensor],torch.Tensor] = lambda x: x, target_transform: Callable[[torch.Tensor],torch.Tensor] = lambda x: x, normalize: bool = True, train: bool = True):
         mat_data = scipy.io.loadmat(mat_file)
+        self.transform = transform
+        self.target_transform = target_transform
 
         if train:
             x_data = mat_data['XTrain']
@@ -92,8 +127,8 @@ class MatlabDataset(Dataset):
             x_data = mat_data['XValid']
             y_data = mat_data['YValid']
 
-        self.x = torch.from_numpy(x_data.transpose((3,2,0,1))).float()
-        self.y = torch.from_numpy(y_data.transpose((3,2,0,1))).float()
+        self.x = self.transform(torch.from_numpy(x_data.transpose((3,2,0,1))).float())
+        self.y = self.target_transform(torch.from_numpy(y_data.transpose((3,2,0,1))).float())
 
         if not normalize:
             return

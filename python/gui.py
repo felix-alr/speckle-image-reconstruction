@@ -62,5 +62,5 @@ class DrawingApp:
         with torch.no_grad():
             output = self.model(img_tensor)
             plt.figure()
-            plt.imshow(output.squeeze(0).squeeze(0))
+            plt.imshow(output.squeeze(0).squeeze(0), cmap="grey")
             plt.show()

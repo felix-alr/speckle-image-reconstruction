@@ -15,20 +15,18 @@ import matplotlib.pyplot as plt
 
 import tkinter as tk
 
-import python.data as data
-
 from python import data
 from python.gui import DrawingApp
 from python.model import MLP
-from python.test import compute_average_loss
 from python.train import train_network
 
-train = True
+train = False
 save_model = True
 
 # Detect device
 device: torch.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+# Load convolution kernel
 kernel = torch.tensor(np.array(h5py.File("data/kernel.mat")['PSF']))
 
 # Create instance of NeuralNetwork model
@@ -39,8 +37,20 @@ model = MLP([imgx**2, imgx**2, imgx**2], [nn.ReLU()], lambda x: x.reshape(-1, 1,
 
 if __name__ == '__main__':
     # Load datasets
+
+    # Initializing Augmenter for the imported dataset to extend training data using the RandomizedImageAugmentationTransform and the DiffuserTransform to convert augmented targets to corresponding training inputs.
+    print("Initializing datasets...")
+    augmenter = data.ImageDatasetTargetAugmenter(data.RandomizedImageAugmentationTransform(), data.DiffuserTransform(kernel))
+
+    # Import training and test data
     training_data = data.MatlabDataset("data/DATA_Diff_16.mat")
     test_data = data.MatlabDataset("data/DATA_Diff_16.mat", train=False)
+
+    # Augment training and test data
+    print("Augmenting datasets...")
+    training_data.x, training_data.y = augmenter(training_data.y)
+
+    print("Finished preparing datasets!")
 
     train_loader = DataLoader(training_data, batch_size=130, shuffle=True, num_workers=0)
     test_loader = DataLoader(test_data, batch_size=100, shuffle=False, num_workers=0)
