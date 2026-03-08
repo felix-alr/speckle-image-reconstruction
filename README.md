@@ -36,8 +36,9 @@ layers = unetLayers([I_px I_px 1], 2, 'encoderDepth',3);
 ```
 For further examples you may have a look at `matlab/evaluate_networks.m` and `matlab/functions/*.m`as those files comprise the code for evaluating and thus reconstructing images using the models.
 ### Executing the demo program
-The code for the demo is located withing `matlab/functions/predictDrawing.m` and can be executed by runnin `matlab/evaluate_networks.m`. You may want to comment out the code for generating plots beforehand which can be done by commenting out or removing all the code after line 12. Running the script will the open a drawing tool with a button `Predict` and `Clear`. Clicking predict will then open a figure showing the drawn image, the diffused image that has been passed to the model as well as the image reconstructed by the model.
+The code for the demo is located withing `matlab/functions/predictDrawing.m` and can be executed by running `matlab/evaluate_networks.m`. You may want to comment out the code for generating plots beforehand which can be done by commenting out or removing all the code after line 12. Running the script will the open a drawing tool with a button `Predict` and `Clear`. Clicking predict will then open a figure showing the drawn image, the diffused image that has been passed to the model as well as the image reconstructed by the model.
 
 ## Python
 Using the Python-Model may be achieved as follows:
 1. Open `main.py`in an IDE.
+
