@@ -18,9 +18,11 @@ import tkinter as tk
 from python import data
 from python.gui import DrawingApp
 from python.model import MLP
+from python.model import  UNetRegression
 from python.train import train_network
 
-train = False
+train = True
+useMLP = True
 save_model = True
 
 # Detect device
@@ -31,7 +33,11 @@ kernel = torch.tensor(np.array(h5py.File("data/kernel.mat")['PSF']))
 
 # Create instance of NeuralNetwork model
 imgx = 16 # Image size
-model = MLP([imgx**2, imgx**2, imgx**2], [nn.ReLU()], lambda x: x.reshape(-1, 1, imgx, imgx)).to(device)
+model = None
+if useMLP:
+    model = MLP([imgx**2, imgx**2, imgx**2], [nn.ReLU()], lambda x: x.reshape(-1, 1, imgx, imgx)).to(device)
+else:
+    model = UNetRegression().to(device)
 
 
 
@@ -71,9 +77,15 @@ if __name__ == '__main__':
         train_network(model, train_loader, opt_adam, loss, options)
 
         if save_model:
-            torch.save(model.state_dict(), "mlp_model.pth")
+            if useMLP:
+                torch.save(model.state_dict(), "mlp_model.pth")
+            else:
+                torch.save(model.state_dict(), "unet_model.pth")
     else:
-        model.load_state_dict(torch.load("mlp_model.pth", map_location=device))
+        if useMLP:
+            model.load_state_dict(torch.load("mlp_model.pth", map_location=device))
+        else:
+            model.load_state_dict(torch.load("unet_model.pth", map_location=device))
         root = tk.Tk()
         app = DrawingApp(root, model, kernel)
         root.mainloop()
